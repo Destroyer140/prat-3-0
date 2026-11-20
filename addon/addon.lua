@@ -393,11 +393,17 @@ function addon:PostEnable()
 	Prat.AddPrintMethods()
 
 	-- TEMP: Gamepad hacks
+	-- Only stub these while the gamepad UI is in use. With mouse and keyboard, Blizzard's own
+	-- methods already return false, and Blizzard calls them from secure code (FCF_OnUpdate and
+	-- FCFDock_SelectWindow), so our stubs would taint the chat tab alpha/alert lookups there.
+	local gamepadUI = InputUtil and InputUtil.IsGamepadUIEnabled and InputUtil.IsGamepadUIEnabled()
 	for _, v in pairs(Prat.HookedFrames) do
-		v.SetGamepadFocus = function() end
-		v.ClearGamepadFocus = function() end
-		v.HasGamepadFocus = function() return false end
-		v.IsGamepadMenuOpen = function() return false end
+		if gamepadUI then
+			v.SetGamepadFocus = function() end
+			v.ClearGamepadFocus = function() end
+			v.HasGamepadFocus = function() return false end
+			v.IsGamepadMenuOpen = function() return false end
+		end
 		hooksecurefunc(_G[v:GetName() .. "EditBox"], 'ClearChat', function(editbox)
 			if InputUtil and InputUtil.IsGamepadUIEnabled and InputUtil.IsGamepadUIEnabled() then
 				ChatFrameUtil.DeactivateChat(editbox)
